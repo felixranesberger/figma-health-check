@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(find /Users/franesberger/Documents/workspace -type d -name *thi* -o -type d -name *THI*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(xargs kill:*)",
+      "Bash(cat dist/assets/index-*.css)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(git -C /Users/franesberger/Documents/workspace/figma-health-check diff)"
+    ]
+  }
+}
