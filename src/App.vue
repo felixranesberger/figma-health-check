@@ -63,14 +63,22 @@ function onKeyDown(e: KeyboardEvent) {
             placeholder="figd_xxxxxxxxxxxxxxxxxxxx"
             class="w-full rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2.5 font-mono text-[13px] text-(--color-text) outline-none"
           />
-          <label class="mt-1.5 flex cursor-pointer select-none items-center gap-1.5 text-[11px] text-(--color-text-muted)">
-            <input
-              v-model="saveToken"
-              type="checkbox"
-              class="accent-(--color-accent)"
-            />
-            Remember token in localStorage (never leaves your machine)
-          </label>
+          <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-(--color-text-muted)">
+            <label class="flex cursor-pointer select-none items-center gap-1.5">
+              <input
+                v-model="saveToken"
+                type="checkbox"
+                class="accent-(--color-accent)"
+              />
+              Remember token in localStorage
+            </label>
+            <a
+              href="https://help.figma.com/hc/en-us/articles/8085703771159-Manage-personal-access-tokens"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-(--color-accent) hover:underline"
+            >How to generate a token &nearr;</a>
+          </div>
         </div>
 
         <!-- File URL input -->
@@ -85,6 +93,9 @@ function onKeyDown(e: KeyboardEvent) {
             class="w-full rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2.5 font-mono text-[13px] text-(--color-text) outline-none"
             @keydown="onKeyDown"
           />
+          <p class="mt-1.5 text-[11px] text-(--color-text-muted)">
+            Open any Figma file and copy the URL from your browser address bar.
+          </p>
         </div>
 
         <!-- Config panel -->
