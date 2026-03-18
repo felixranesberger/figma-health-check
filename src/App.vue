@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useHealthCheck } from './composables/useHealthCheck'
 import ConfigPanel from './components/ConfigPanel.vue'
 import ResultsPanel from './components/ResultsPanel.vue'
@@ -28,10 +29,13 @@ const {
 } = useHealthCheck()
 
 const canRun = () => !loading.value && token.value && fileUrl.value
+const activeTab = ref<'issues' | 'tokens'>('issues')
 
 function onKeyDown(e: KeyboardEvent) {
   if (e.key === 'Enter' && canRun()) runCheck()
 }
+
+const hasResults = () => result.value && score.value !== null
 </script>
 
 <template>
@@ -127,11 +131,37 @@ function onKeyDown(e: KeyboardEvent) {
       {{ error }}
     </div>
 
-    <!-- Results -->
+    <!-- Tabs -->
+    <div v-if="hasResults() || tokens" class="mb-5 flex gap-1 border-b border-(--color-border)">
+      <button
+        class="cursor-pointer border-none bg-transparent px-4 py-2.5 text-[13px] font-semibold transition-colors duration-150"
+        :class="activeTab === 'issues'
+          ? 'border-b-2 border-(--color-accent) text-(--color-accent)'
+          : 'text-(--color-text-muted) hover:text-(--color-text)'"
+        :style="activeTab === 'issues' ? 'margin-bottom: -1px; border-bottom: 2px solid var(--color-accent)' : ''"
+        @click="activeTab = 'issues'"
+      >
+        Issues
+        <span v-if="result" class="ml-1 font-mono text-[11px]">({{ result.issues.length }})</span>
+      </button>
+      <button
+        class="cursor-pointer border-none bg-transparent px-4 py-2.5 text-[13px] font-semibold transition-colors duration-150"
+        :class="activeTab === 'tokens'
+          ? 'border-b-2 border-(--color-accent) text-(--color-accent)'
+          : 'text-(--color-text-muted) hover:text-(--color-text)'"
+        :style="activeTab === 'tokens' ? 'margin-bottom: -1px; border-bottom: 2px solid var(--color-accent)' : ''"
+        @click="activeTab = 'tokens'"
+      >
+        Design Tokens
+        <span v-if="tokens" class="ml-1 font-mono text-[11px]">({{ tokens.colors.length + tokens.textStyles.length }})</span>
+      </button>
+    </div>
+
+    <!-- Issues tab -->
     <ResultsPanel
-      v-if="result && score !== null"
-      :result="result"
-      :score="score"
+      v-if="hasResults() && activeTab === 'issues'"
+      :result="result!"
+      :score="score!"
       :score-color="scoreColor"
       :error-count="errorCount"
       :warning-count="warningCount"
@@ -142,8 +172,8 @@ function onKeyDown(e: KeyboardEvent) {
       v-model:severity-filter="severityFilter"
     />
 
-    <!-- Extracted Tokens -->
-    <TokensPanel v-if="tokens" :tokens="tokens" />
+    <!-- Tokens tab -->
+    <TokensPanel v-if="tokens && activeTab === 'tokens'" :tokens="tokens" />
 
     <!-- Empty state -->
     <div v-if="!result && !error && !loading" class="px-5 py-12 text-center text-(--color-text-muted)">

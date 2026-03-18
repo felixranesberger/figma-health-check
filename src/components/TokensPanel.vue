@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { ExtractedTokens, ExtractedColor } from '../lib/token-extractor'
+import type { ExtractedTokens } from '../lib/token-extractor'
+import { buildColorTree, flattenTree } from '../lib/color-tree'
 import ColorGroup from './ColorGroup.vue'
-import type { ColorTreeNode } from './ColorGroup.vue'
 
 const props = defineProps<{
   tokens: ExtractedTokens
@@ -23,36 +23,12 @@ const stats = computed(() => [
   { label: 'spacing values', value: props.tokens.spacingValues.length },
 ].filter(s => s.value > 0))
 
-// Build a nested tree from "/" delimited style names
-const colorTree = computed((): ColorTreeNode => {
-  const root: ColorTreeNode = { name: '', colors: [], children: new Map() }
-
-  for (const c of props.tokens.colors) {
-    const segments = c.styleName.split('/')
-    let current = root
-
-    // Walk all segments except the last (which is the leaf color name)
-    for (let i = 0; i < segments.length - 1; i++) {
-      const seg = segments[i]
-      if (!current.children.has(seg)) {
-        current.children.set(seg, { name: seg, colors: [], children: new Map() })
-      }
-      current = current.children.get(seg)!
-    }
-
-    current.colors.push(c)
-  }
-
-  return root
-})
+const colorGroups = computed(() => flattenTree(buildColorTree(props.tokens.colors)))
 </script>
 
 <template>
-  <div class="mt-6">
-    <div class="mb-4 flex items-center gap-3">
-      <h2 class="text-[16px] font-bold">Extracted Design Tokens</h2>
-      <span class="text-[11px] text-(--color-text-muted)">{{ tokens.fileName }}</span>
-    </div>
+  <div>
+    <div class="mb-4 text-[11px] text-(--color-text-muted)">{{ tokens.fileName }}</div>
 
     <!-- Summary stats -->
     <div class="mb-4 flex flex-wrap gap-3">
@@ -66,37 +42,18 @@ const colorTree = computed((): ColorTreeNode => {
       </div>
     </div>
 
-    <!-- Color swatches (recursive tree) -->
-    <div v-if="tokens.colors.length > 0" class="mb-4">
+    <!-- Color swatches -->
+    <div v-if="tokens.colors.length > 0" class="mb-8">
       <h3 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Colors</h3>
       <p class="mb-3 text-[10px] text-(--color-text-muted)">
         Extracted from defined color styles in the Figma file. Only colors applied via a named style are included &mdash; raw hex values on individual nodes are not captured.
       </p>
-      <div class="space-y-2">
-        <!-- Render top-level leaf colors (no group) -->
-        <div v-if="colorTree.colors.length > 0" class="mb-2 flex flex-wrap gap-1.5">
-          <div
-            v-for="c in colorTree.colors"
-            :key="c.styleId"
-            class="flex items-center gap-1.5 rounded-md border border-(--color-border) bg-(--color-surface-raised) px-2 py-1"
-          >
-            <span class="inline-block h-3.5 w-3.5 rounded-sm border border-(--color-border)" :style="{ background: c.hex }" />
-            <span class="font-mono text-[10px] text-(--color-text-muted)">{{ c.leafName }}</span>
-            <span class="font-mono text-[10px] text-(--color-text)" style="opacity: 0.5">{{ c.hex }}</span>
-          </div>
-        </div>
-        <!-- Render grouped children -->
-        <ColorGroup
-          v-for="[key, child] in colorTree.children"
-          :key="key"
-          :node="child"
-          :depth="0"
-        />
-      </div>
+      <ColorGroup :groups="colorGroups" />
     </div>
 
     <!-- Text styles -->
-    <div v-if="tokens.textStyles.length > 0" class="mb-4">
+
+    <div v-if="tokens.textStyles.length > 0" class="mb-8">
       <h3 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Typography</h3>
       <p class="mb-2 text-[10px] text-(--color-text-muted)">
         Extracted from defined text styles in the Figma file. Shows font family, weight, size, line-height ratio, and additional properties like text-transform or decoration when set.
@@ -121,7 +78,7 @@ const colorTree = computed((): ColorTreeNode => {
     </div>
 
     <!-- Spacing values in use -->
-    <div v-if="tokens.spacingValues.length > 0" class="mb-4">
+    <div v-if="tokens.spacingValues.length > 0" class="mb-8">
       <h3 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Spacing Values in Use</h3>
       <p class="mb-2 text-[10px] text-(--color-text-muted)">
         Collected from Auto-Layout frames only (gap, padding, counter-axis spacing).
