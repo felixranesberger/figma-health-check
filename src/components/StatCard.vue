@@ -20,7 +20,15 @@ const c = computed(() => props.color ?? 'var(--color-text)')
     <div class="mt-1 text-[11px] font-medium text-(--color-text-muted)" style="letter-spacing: 0.02em">
       {{ label }}
     </div>
-    <div v-if="total > 0" class="mt-2 h-[3px] overflow-hidden rounded-sm bg-(--color-border)">
+    <div
+      v-if="total > 0"
+      role="progressbar"
+      :aria-valuenow="pct"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      :aria-label="`${label}: ${value} of ${total} (${pct}%)`"
+      class="mt-2 h-[3px] overflow-hidden rounded-sm bg-(--color-border)"
+    >
       <div
         class="h-full rounded-sm transition-[width] duration-600"
         :style="{ width: `${pct}%`, background: c }"

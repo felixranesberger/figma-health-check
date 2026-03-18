@@ -20,6 +20,6 @@ const icon = computed(() => icons[props.type] ?? '?')
     class="inline-flex items-center gap-1 rounded border border-(--color-border) bg-(--color-surface-raised) px-2 py-0.5 font-mono text-[10px] font-semibold text-(--color-text-muted)"
     style="letter-spacing: 0.03em"
   >
-    <span class="text-xs">{{ icon }}</span>{{ type }}
+    <span class="text-xs" aria-hidden="true">{{ icon }}</span>{{ type }}
   </span>
 </template>

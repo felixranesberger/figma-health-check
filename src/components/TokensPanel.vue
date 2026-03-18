@@ -44,7 +44,7 @@ const colorGroups = computed(() => flattenTree(buildColorTree(props.tokens.color
 
     <!-- Color swatches -->
     <div v-if="tokens.colors.length > 0" class="mb-8">
-      <h3 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Colors</h3>
+      <h2 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Colors</h2>
       <p class="mb-3 text-[10px] text-(--color-text-muted)">
         Extracted from defined color styles in the Figma file. Only colors applied via a named style are included &mdash; raw hex values on individual nodes are not captured.
       </p>
@@ -54,7 +54,7 @@ const colorGroups = computed(() => flattenTree(buildColorTree(props.tokens.color
     <!-- Text styles -->
 
     <div v-if="tokens.textStyles.length > 0" class="mb-8">
-      <h3 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Typography</h3>
+      <h2 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Typography</h2>
       <p class="mb-2 text-[10px] text-(--color-text-muted)">
         Extracted from defined text styles in the Figma file. Shows font family, weight, size, line-height ratio, and additional properties like text-transform or decoration when set.
       </p>
@@ -79,7 +79,7 @@ const colorGroups = computed(() => flattenTree(buildColorTree(props.tokens.color
 
     <!-- Spacing values in use -->
     <div v-if="tokens.spacingValues.length > 0" class="mb-8">
-      <h3 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Spacing Values in Use</h3>
+      <h2 class="mb-2 text-[13px] font-semibold text-(--color-text-muted)">Spacing Values in Use</h2>
       <p class="mb-2 text-[10px] text-(--color-text-muted)">
         Collected from Auto-Layout frames only (gap, padding, counter-axis spacing).
         Figma has no "spacing styles" &mdash; these are the actual values designers set on frames with Auto-Layout enabled.
@@ -107,13 +107,14 @@ const colorGroups = computed(() => flattenTree(buildColorTree(props.tokens.color
     <!-- Generated CSS -->
     <div v-if="tokens.css">
       <div class="mb-2 flex items-center gap-3">
-        <h3 class="text-[13px] font-semibold text-(--color-text-muted)">Generated CSS</h3>
+        <h2 class="text-[13px] font-semibold text-(--color-text-muted)">Generated CSS</h2>
         <button
           class="cursor-pointer rounded-md border border-(--color-border) bg-(--color-surface-raised) px-2.5 py-1 text-[11px] font-semibold text-(--color-accent)"
           @click="copyCSS(tokens.css)"
         >
           {{ copied ? 'Copied!' : 'Copy CSS' }}
         </button>
+        <span aria-live="polite" class="sr-only">{{ copied ? 'Copied to clipboard' : '' }}</span>
       </div>
       <pre class="max-h-[400px] overflow-auto rounded-xl border border-(--color-border-strong) bg-(--color-surface) p-4 font-mono text-[11px] leading-relaxed text-(--color-text)">{{ tokens.css }}</pre>
     </div>

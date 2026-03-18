@@ -55,12 +55,13 @@ function severityLabel(s: Severity | 'all') {
   </div>
 
   <!-- Severity filters -->
-  <div class="mb-3 flex flex-wrap items-center gap-2">
+  <div class="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label="Filter by severity">
     <span class="text-[13px] font-bold">{{ result.issues.length }} issues</span>
     <span class="flex-1" />
     <button
       v-for="s in severityOptions"
       :key="s"
+      :aria-pressed="severityFilter === s"
       class="cursor-pointer rounded-md border px-2.5 py-1 text-[11px] font-semibold capitalize"
       :class="severityFilter === s
         ? 'border-(--color-accent) bg-[rgba(10,132,255,0.15)] text-(--color-accent)'
@@ -72,10 +73,11 @@ function severityLabel(s: Severity | 'all') {
   </div>
 
   <!-- Type filters -->
-  <div class="mb-3 flex flex-wrap gap-1.5">
+  <div class="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="Filter by type">
     <button
       v-for="t in typeOptions"
       :key="t"
+      :aria-pressed="typeFilter === t"
       class="cursor-pointer rounded-md border px-2.5 py-1 text-[11px] font-semibold capitalize"
       :class="typeFilter === t
         ? 'border-(--color-accent) bg-[rgba(10,132,255,0.15)] text-(--color-accent)'

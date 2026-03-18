@@ -4,20 +4,20 @@ import type { Severity } from '../lib/analyzer'
 
 const props = defineProps<{ severity: Severity }>()
 
-const colors: Record<Severity, { bg: string; text: string }> = {
-  error: { bg: '#FF3B30', text: '#fff' },
-  warning: { bg: '#FF9500', text: '#fff' },
-  info: { bg: '#636366', text: '#fff' },
+const styles: Record<Severity, { bg: string; text: string; icon: string }> = {
+  error: { bg: '#FF3B30', text: '#fff', icon: '\u2716' },
+  warning: { bg: '#FF9500', text: '#fff', icon: '\u26A0' },
+  info: { bg: '#636366', text: '#fff', icon: '\u2139' },
 }
 
-const c = computed(() => colors[props.severity] ?? colors.info)
+const s = computed(() => styles[props.severity] ?? styles.info)
 </script>
 
 <template>
   <span
     class="inline-block rounded px-2 py-0.5 font-mono text-[10px] font-bold uppercase"
-    :style="{ background: c.bg, color: c.text, letterSpacing: '0.05em' }"
+    :style="{ background: s.bg, color: s.text, letterSpacing: '0.05em' }"
   >
-    {{ severity }}
+    <span aria-hidden="true">{{ s.icon }}</span> {{ severity }}
   </span>
 </template>

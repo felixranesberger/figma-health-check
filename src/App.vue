@@ -16,7 +16,6 @@ const {
   severityFilter,
   spacingInput,
   saveToken,
-  configOpen,
   fileKey,
   tokens,
   filteredIssues,
@@ -39,11 +38,14 @@ const hasResults = () => result.value && score.value !== null
 </script>
 
 <template>
-  <div class="mx-auto max-w-[860px] px-5 py-8">
+  <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-(--color-accent) focus:px-4 focus:py-2 focus:text-white">
+    Skip to main content
+  </a>
+  <main id="main-content" class="mx-auto max-w-[860px] px-5 py-8">
     <!-- Header -->
-    <div class="mb-8">
+    <header class="mb-8">
       <div class="mb-1.5 flex items-center gap-2.5">
-        <span class="text-[26px]" style="line-height: 1">&#x2B21;</span>
+        <span class="text-[26px]" aria-hidden="true" style="line-height: 1">&#x2B21;</span>
         <h1 class="text-[22px] font-extrabold" style="letter-spacing: -0.03em">
           Figma Design Health Check
         </h1>
@@ -51,21 +53,25 @@ const hasResults = () => result.value && score.value !== null
       <p class="text-[13px] leading-normal text-(--color-text-muted)">
         Checks that your Figma file consistently uses its defined design system — styles, spacing tokens &amp; auto-layout.
       </p>
-    </div>
+    </header>
 
     <!-- Input -->
-    <div class="mb-5 rounded-xl border border-(--color-border-strong) bg-(--color-surface-raised) p-5">
+    <section aria-label="Configuration" class="mb-5 rounded-xl border border-(--color-border-strong) bg-(--color-surface-raised) p-5">
       <div class="flex flex-col gap-3">
         <!-- Token input -->
         <div>
-          <label class="mb-1.5 block text-[11px] font-bold uppercase text-(--color-text-muted)" style="letter-spacing: 0.06em">
+          <label for="figma-token" class="mb-1.5 block text-[11px] font-bold uppercase text-(--color-text-muted)" style="letter-spacing: 0.06em">
             Figma Personal Access Token
           </label>
           <input
+            id="figma-token"
             v-model="token"
             type="password"
+            name="token"
+            autocomplete="off"
             placeholder="figd_xxxxxxxxxxxxxxxxxxxx"
             class="w-full rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2.5 font-mono text-[13px] text-(--color-text) outline-none"
+            @keydown="onKeyDown"
           />
           <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-(--color-text-muted)">
             <label class="flex cursor-pointer select-none items-center gap-1.5">
@@ -87,24 +93,27 @@ const hasResults = () => result.value && score.value !== null
 
         <!-- File URL input -->
         <div>
-          <label class="mb-1.5 block text-[11px] font-bold uppercase text-(--color-text-muted)" style="letter-spacing: 0.06em">
+          <label for="figma-file-url" class="mb-1.5 block text-[11px] font-bold uppercase text-(--color-text-muted)" style="letter-spacing: 0.06em">
             Figma File URL or Key
           </label>
           <input
+            id="figma-file-url"
             v-model="fileUrl"
-            type="text"
+            type="url"
+            name="fileUrl"
+            autocomplete="url"
+            aria-describedby="file-url-hint"
             placeholder="https://www.figma.com/design/aBcDeFg..."
             class="w-full rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2.5 font-mono text-[13px] text-(--color-text) outline-none"
             @keydown="onKeyDown"
           />
-          <p class="mt-1.5 text-[11px] text-(--color-text-muted)">
+          <p id="file-url-hint" class="mt-1.5 text-[11px] text-(--color-text-muted)">
             Open any Figma file and copy the URL from your browser address bar.
           </p>
         </div>
 
         <!-- Config panel -->
         <ConfigPanel
-          v-model:config-open="configOpen"
           v-model:spacing-input="spacingInput"
         />
 
@@ -121,19 +130,29 @@ const hasResults = () => result.value && score.value !== null
           {{ loading ? (progress || 'Running\u2026') : 'Run Health Check' }}
         </button>
       </div>
+    </section>
+
+    <!-- Status announcements for screen readers -->
+    <div aria-live="polite" class="sr-only">
+      {{ loading ? (progress || 'Running health check\u2026') : '' }}
     </div>
 
     <!-- Error -->
     <div
-      v-if="error"
+      role="alert"
       class="mb-5 rounded-lg border border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.12)] px-[18px] py-3.5 font-mono text-[13px] text-[#FF6961]"
+      :class="{ hidden: !error }"
     >
       {{ error }}
     </div>
 
     <!-- Tabs -->
-    <div v-if="hasResults() || tokens" class="mb-5 flex gap-1 border-b border-(--color-border)">
+    <div v-if="hasResults() || tokens" role="tablist" aria-label="Results" class="mb-5 flex gap-1 border-b border-(--color-border)">
       <button
+        id="tab-issues"
+        role="tab"
+        :aria-selected="activeTab === 'issues'"
+        aria-controls="tabpanel-issues"
         class="cursor-pointer border-none bg-transparent px-4 py-2.5 text-[13px] font-semibold transition-colors duration-150"
         :class="activeTab === 'issues'
           ? 'border-b-2 border-(--color-accent) text-(--color-accent)'
@@ -145,6 +164,10 @@ const hasResults = () => result.value && score.value !== null
         <span v-if="result" class="ml-1 font-mono text-[11px]">({{ result.issues.length }})</span>
       </button>
       <button
+        id="tab-tokens"
+        role="tab"
+        :aria-selected="activeTab === 'tokens'"
+        aria-controls="tabpanel-tokens"
         class="cursor-pointer border-none bg-transparent px-4 py-2.5 text-[13px] font-semibold transition-colors duration-150"
         :class="activeTab === 'tokens'
           ? 'border-b-2 border-(--color-accent) text-(--color-accent)'
@@ -158,26 +181,29 @@ const hasResults = () => result.value && score.value !== null
     </div>
 
     <!-- Issues tab -->
-    <ResultsPanel
-      v-if="hasResults() && activeTab === 'issues'"
-      :result="result!"
-      :score="score!"
-      :score-color="scoreColor"
-      :error-count="errorCount"
-      :warning-count="warningCount"
-      :info-count="infoCount"
-      :filtered-issues="filteredIssues"
-      :file-key="fileKey"
-      v-model:type-filter="typeFilter"
-      v-model:severity-filter="severityFilter"
-    />
+    <div v-if="hasResults() && activeTab === 'issues'" id="tabpanel-issues" role="tabpanel" aria-labelledby="tab-issues">
+      <ResultsPanel
+        :result="result!"
+        :score="score!"
+        :score-color="scoreColor"
+        :error-count="errorCount"
+        :warning-count="warningCount"
+        :info-count="infoCount"
+        :filtered-issues="filteredIssues"
+        :file-key="fileKey"
+        v-model:type-filter="typeFilter"
+        v-model:severity-filter="severityFilter"
+      />
+    </div>
 
     <!-- Tokens tab -->
-    <TokensPanel v-if="tokens && activeTab === 'tokens'" :tokens="tokens" />
+    <div v-if="tokens && activeTab === 'tokens'" id="tabpanel-tokens" role="tabpanel" aria-labelledby="tab-tokens">
+      <TokensPanel :tokens="tokens" />
+    </div>
 
     <!-- Empty state -->
     <div v-if="!result && !error && !loading" class="px-5 py-12 text-center text-(--color-text-muted)">
-      <div class="mb-3 text-[32px] opacity-40">&#x2B21;</div>
+      <div class="mb-3 text-[32px] opacity-40" aria-hidden="true">&#x2B21;</div>
       <p class="mb-4 text-[13px]" style="line-height: 1.6">
         Paste your Figma token and file URL to get started.
       </p>
@@ -197,5 +223,5 @@ const hasResults = () => result.value && score.value !== null
         Spacing values from Auto-Layout frames (gap, padding) &mdash; Figma has no spacing styles, so these are the actual values set on frames with Auto-Layout enabled.
       </div>
     </div>
-  </div>
+  </main>
 </template>

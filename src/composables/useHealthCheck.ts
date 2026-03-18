@@ -24,8 +24,6 @@ export function useHealthCheck() {
   const severityFilter = ref<Severity | 'all'>('all')
   const spacingInput = ref(DEFAULT_SPACING_TOKENS.join(', '))
   const saveToken = ref(!!localStorage.getItem(STORAGE_KEY))
-  const configOpen = ref(false)
-
   const fileKey = computed(() => {
     if (!fileUrl.value) return ''
     return extractFileKey(fileUrl.value)
@@ -132,7 +130,6 @@ export function useHealthCheck() {
     severityFilter,
     spacingInput,
     saveToken,
-    configOpen,
     fileKey,
     filteredIssues,
     errorCount,
