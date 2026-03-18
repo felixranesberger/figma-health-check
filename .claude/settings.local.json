@@ -13,7 +13,10 @@
       "Bash(cat dist/assets/index-*.css)",
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_take_screenshot",
-      "Bash(git -C /Users/franesberger/Documents/workspace/figma-health-check diff)"
+      "Bash(git -C /Users/franesberger/Documents/workspace/figma-health-check diff)",
+      "Bash(git add:*)",
+      "Bash(git rebase:*)",
+      "Bash(GIT_EDITOR=true git rebase --continue)"
     ]
   }
 }
