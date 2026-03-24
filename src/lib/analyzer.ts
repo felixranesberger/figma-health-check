@@ -200,10 +200,13 @@ function analyzeNode(
       })
     }
 
-    // Fill must use a defined color style
+    // Fill must use a defined color style or variable
     if (node.fills && node.fills.length > 0) {
-      const hasFillStyle = node.styles?.fill || node.styles?.fills
-      const solidFills = node.fills.filter(f => f.type === 'SOLID' && f.visible !== false)
+      const hasFillStyle = node.styles?.fill || node.styles?.fills || node.boundVariables?.fills
+      const solidFills = node.fills.filter(f =>
+        f.type === 'SOLID' && f.visible !== false && (!f.color || f.color.a > 0)
+        && !f.boundVariables?.color
+      )
 
       if (!hasFillStyle && solidFills.length > 0) {
         stats.unstyledFills++

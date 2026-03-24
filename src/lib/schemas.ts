@@ -39,8 +39,9 @@ export type FigmaNode = {
   paddingRight?: number
   paddingBottom?: number
   paddingLeft?: number
-  fills?: Array<{ type: string; visible?: boolean; color?: { r: number; g: number; b: number; a: number } }>
+  fills?: Array<{ type: string; visible?: boolean; color?: { r: number; g: number; b: number; a: number }; boundVariables?: Record<string, unknown> }>
   strokes?: Array<{ type: string; visible?: boolean; color?: { r: number; g: number; b: number; a: number } }>
+  boundVariables?: Record<string, unknown>
   strokeWeight?: number
   cornerRadius?: number
   topLeftRadius?: number

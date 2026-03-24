@@ -16,6 +16,11 @@ const {
   severityFilter,
   spacingInput,
   saveToken,
+  pages,
+  selectedPageIds,
+  togglePage,
+  toggleAllPages,
+  fetchPages,
   fileKey,
   tokens,
   filteredIssues,
@@ -27,11 +32,12 @@ const {
   runCheck,
 } = useHealthCheck()
 
-const canRun = () => !loading.value && token.value && fileUrl.value
+const canFetch = () => !loading.value && token.value && fileUrl.value
+const canRun = () => !loading.value && selectedPageIds.value.size > 0
 const activeTab = ref<'issues' | 'tokens'>('issues')
 
 function onKeyDown(e: KeyboardEvent) {
-  if (e.key === 'Enter' && canRun()) runCheck()
+  if (e.key === 'Enter' && canFetch()) fetchPages()
 }
 
 const hasResults = () => result.value && score.value !== null
@@ -117,19 +123,62 @@ const hasResults = () => result.value && score.value !== null
           v-model:spacing-input="spacingInput"
         />
 
-        <!-- Run button -->
+        <!-- Fetch pages button -->
         <button
-          :disabled="!canRun()"
+          v-if="pages.length === 0"
+          :disabled="!canFetch()"
           class="rounded-lg border-none px-6 py-3 text-[13px] font-bold transition-all duration-200"
-          :class="canRun()
+          :class="canFetch()
             ? 'cursor-pointer bg-(--color-accent) text-white hover:bg-(--color-accent-hover)'
             : 'cursor-not-allowed bg-(--color-border) text-(--color-text-muted)'"
           style="letter-spacing: 0.01em"
-          @click="runCheck"
+          @click="fetchPages"
         >
-          {{ loading ? (progress || 'Running\u2026') : 'Run Health Check' }}
+          {{ loading ? (progress || 'Fetching\u2026') : 'Fetch Pages' }}
         </button>
       </div>
+    </section>
+
+    <!-- Page selection -->
+    <section v-if="pages.length > 0 && !hasResults()" aria-label="Page selection" class="mb-5 rounded-xl border border-(--color-border-strong) bg-(--color-surface-raised) p-5">
+      <div class="mb-3 flex items-center justify-between">
+        <label class="block text-[11px] font-bold uppercase text-(--color-text-muted)" style="letter-spacing: 0.06em">
+          Select Pages to Analyze
+        </label>
+        <button
+          class="cursor-pointer border-none bg-transparent p-0 text-[11px] font-semibold text-(--color-accent)"
+          @click="toggleAllPages"
+        >
+          {{ selectedPageIds.size === pages.length ? 'Deselect All' : 'Select All' }}
+        </button>
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label
+          v-for="page in pages"
+          :key="page.id"
+          class="flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors duration-150"
+          :class="selectedPageIds.has(page.id) ? 'bg-(--color-surface)' : 'opacity-50'"
+        >
+          <input
+            type="checkbox"
+            :checked="selectedPageIds.has(page.id)"
+            class="accent-(--color-accent)"
+            @change="togglePage(page.id)"
+          />
+          {{ page.name }}
+        </label>
+      </div>
+      <button
+        :disabled="!canRun()"
+        class="mt-4 w-full rounded-lg border-none px-6 py-3 text-[13px] font-bold transition-all duration-200"
+        :class="canRun()
+          ? 'cursor-pointer bg-(--color-accent) text-white hover:bg-(--color-accent-hover)'
+          : 'cursor-not-allowed bg-(--color-border) text-(--color-text-muted)'"
+        style="letter-spacing: 0.01em"
+        @click="runCheck"
+      >
+        {{ loading ? (progress || 'Running\u2026') : `Run Health Check (${selectedPageIds.size} page${selectedPageIds.size === 1 ? '' : 's'})` }}
+      </button>
     </section>
 
     <!-- Status announcements for screen readers -->

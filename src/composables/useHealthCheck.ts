@@ -4,6 +4,7 @@ import { analyzeFile, DEFAULT_SPACING_TOKENS, DEFAULT_SPACING_TOLERANCE } from '
 import type { AnalysisResult, IssueType, Severity } from '../lib/analyzer'
 import { extractTokens } from '../lib/token-extractor'
 import type { ExtractedTokens } from '../lib/token-extractor'
+import type { FigmaFileResponse, FigmaStylesResponse } from '../lib/schemas'
 
 const STORAGE_KEY = 'figma-hc-token'
 const FILE_URL_KEY = 'figma-hc-file-url'
@@ -24,6 +25,10 @@ export function useHealthCheck() {
   const severityFilter = ref<Severity | 'all'>('all')
   const spacingInput = ref(DEFAULT_SPACING_TOKENS.join(', '))
   const saveToken = ref(!!localStorage.getItem(STORAGE_KEY))
+  const pages = ref<Array<{ id: string; name: string }>>([])
+  const selectedPageIds = ref<Set<string>>(new Set())
+  const fetchedFileData = ref<FigmaFileResponse | null>(null)
+  const fetchedStylesData = ref<FigmaStylesResponse | null>(null)
   const fileKey = computed(() => {
     if (!fileUrl.value) return ''
     return extractFileKey(fileUrl.value)
@@ -76,20 +81,74 @@ export function useHealthCheck() {
     return 'var(--color-error)'
   })
 
+  async function fetchPages() {
+    loading.value = true
+    error.value = null
+    result.value = null
+    tokens.value = null
+    pages.value = []
+    selectedPageIds.value = new Set()
+    fetchedFileData.value = null
+    try {
+      const fk = extractFileKey(fileUrl.value)
+      if (!fk) throw new Error('Invalid Figma file URL or key')
+
+      progress.value = 'Fetching file from Figma API…'
+      const [fileData, stylesData] = await Promise.all([
+        fetchFigmaFile(fk, token.value),
+        fetchFigmaStyles(fk, token.value),
+      ])
+
+      fetchedFileData.value = fileData
+      fetchedStylesData.value = stylesData
+      const pageList = (fileData.document?.children ?? []).map(p => ({ id: p.id, name: p.name }))
+      pages.value = pageList
+      selectedPageIds.value = new Set(pageList.map(p => p.id))
+      progress.value = ''
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : String(err)
+      progress.value = ''
+    }
+    loading.value = false
+  }
+
+  function togglePage(pageId: string) {
+    const s = new Set(selectedPageIds.value)
+    if (s.has(pageId)) s.delete(pageId)
+    else s.add(pageId)
+    selectedPageIds.value = s
+  }
+
+  function toggleAllPages() {
+    if (selectedPageIds.value.size === pages.value.length) {
+      selectedPageIds.value = new Set()
+    } else {
+      selectedPageIds.value = new Set(pages.value.map(p => p.id))
+    }
+  }
+
   async function runCheck() {
+    if (!fetchedFileData.value) {
+      await fetchPages()
+      return
+    }
+
     loading.value = true
     error.value = null
     result.value = null
     tokens.value = null
     try {
-      const fileKey = extractFileKey(fileUrl.value)
-      if (!fileKey) throw new Error('Invalid Figma file URL or key')
+      const fileData = fetchedFileData.value
+      const stylesData = fetchedStylesData.value!
 
-      progress.value = 'Fetching file from Figma API…'
-      const [fileData, stylesData] = await Promise.all([
-        fetchFigmaFile(fileKey, token.value),
-        fetchFigmaStyles(fileKey, token.value),
-      ])
+      // Filter to selected pages only
+      const filteredFileData: FigmaFileResponse = {
+        ...fileData,
+        document: {
+          ...fileData.document,
+          children: fileData.document.children.filter(p => selectedPageIds.value.has(p.id)),
+        },
+      }
 
       progress.value = 'Analyzing node tree…'
       await new Promise(r => setTimeout(r, 80))
@@ -99,7 +158,7 @@ export function useHealthCheck() {
         .map(s => parseFloat(s.trim()))
         .filter(n => !isNaN(n))
 
-      const analysis = analyzeFile(fileData, stylesData, {
+      const analysis = analyzeFile(filteredFileData, stylesData, {
         spacingTokens: spacingTokens.length > 0 ? spacingTokens : DEFAULT_SPACING_TOKENS,
         tolerance: DEFAULT_SPACING_TOLERANCE,
       })
@@ -107,7 +166,7 @@ export function useHealthCheck() {
       progress.value = 'Extracting design tokens…'
       await new Promise(r => setTimeout(r, 40))
 
-      tokens.value = extractTokens(fileData)
+      tokens.value = extractTokens(filteredFileData)
 
       result.value = analysis
       progress.value = ''
@@ -130,6 +189,11 @@ export function useHealthCheck() {
     severityFilter,
     spacingInput,
     saveToken,
+    pages,
+    selectedPageIds,
+    togglePage,
+    toggleAllPages,
+    fetchPages,
     fileKey,
     filteredIssues,
     errorCount,
