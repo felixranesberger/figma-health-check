@@ -265,7 +265,15 @@ export function analyzeFile(
 
   if (fileData.document?.children) {
     for (const page of fileData.document.children) {
-      analyzeNode(page, '', issues, stats, config, 0)
+      // Only analyze nodes inside top-level frames (artboards).
+      // Loose nodes at the page level (comments, test elements) are skipped.
+      if (page.children) {
+        for (const topLevel of page.children) {
+          if (FRAME_TYPES.has(topLevel.type)) {
+            analyzeNode(topLevel, page.name, issues, stats, config, 0)
+          }
+        }
+      }
     }
   }
 
