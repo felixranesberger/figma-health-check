@@ -8,6 +8,9 @@ import type { FigmaFileResponse, FigmaStylesResponse } from '../lib/schemas'
 
 const STORAGE_KEY = 'figma-hc-token'
 const FILE_URL_KEY = 'figma-hc-file-url'
+const LINK_MODE_KEY = 'figma-hc-link-mode'
+
+export type LinkMode = 'web' | 'desktop' | 'desktop-fallback'
 
 export function useHealthCheck() {
   const token = ref((() => {
@@ -25,6 +28,9 @@ export function useHealthCheck() {
   const severityFilter = ref<Severity | 'all'>('all')
   const spacingInput = ref(DEFAULT_SPACING_TOKENS.join(', '))
   const saveToken = ref(!!localStorage.getItem(STORAGE_KEY))
+  const linkMode = ref<LinkMode>((() => {
+    try { return (localStorage.getItem(LINK_MODE_KEY) as LinkMode) || 'web' } catch { return 'web' }
+  })())
   const pages = ref<Array<{ id: string; name: string }>>([])
   const selectedPageIds = ref<Set<string>>(new Set())
   const fetchedFileData = ref<FigmaFileResponse | null>(null)
@@ -46,6 +52,10 @@ export function useHealthCheck() {
       if (url) localStorage.setItem(FILE_URL_KEY, url)
       else localStorage.removeItem(FILE_URL_KEY)
     } catch { /* ignore */ }
+  })
+
+  watch(linkMode, (v) => {
+    try { localStorage.setItem(LINK_MODE_KEY, v) } catch { /* ignore */ }
   })
 
   const filteredIssues = computed(() => {
@@ -189,6 +199,7 @@ export function useHealthCheck() {
     severityFilter,
     spacingInput,
     saveToken,
+    linkMode,
     pages,
     selectedPageIds,
     togglePage,

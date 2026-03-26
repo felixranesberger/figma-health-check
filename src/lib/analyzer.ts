@@ -11,6 +11,7 @@ export interface Issue {
   severity: Severity
   node: string
   path: string
+  linkedPath: string
   message: string
   detail: string
   nodeId: string
@@ -61,8 +62,12 @@ function analyzeNode(
   stats: AnalysisStats,
   config: AnalysisConfig,
   depth: number,
+  linkedPath: string,
 ): void {
   const currentPath = path ? `${path} → ${node.name}` : node.name
+  // Nodes with compound IDs (inside component instances) can't be deep-linked.
+  // Track the last path segment that has a simple navigable ID.
+  const currentLinkedPath = node.id.includes(';') ? linkedPath : currentPath
   const { spacingTokens, tolerance } = config
 
   // ── Nesting depth ──
@@ -76,6 +81,7 @@ function analyzeNode(
       message: `Nesting depth ${depth} exceeds ${MAX_NESTING_DEPTH}`,
       detail: 'Deep nesting creates complex CSS — consider flattening',
       nodeId: node.id,
+      linkedPath: currentLinkedPath,
     })
   }
 
@@ -96,6 +102,7 @@ function analyzeNode(
         message: 'Text node has no typography style applied',
         detail: `Font: ${fontFamily || '?'} ${fontWeight || '?'}, Size: ${fontSize ?? '?'}px`,
         nodeId: node.id,
+        linkedPath: currentLinkedPath,
       })
     } else {
       stats.styledTextNodes++
@@ -120,6 +127,7 @@ function analyzeNode(
           message: `Auto-layout gap ${gap}px is not a valid spacing token`,
           detail: `Nearest valid: ${nearestToken(gap, spacingTokens)}px`,
           nodeId: node.id,
+          linkedPath: currentLinkedPath,
         })
       }
 
@@ -134,6 +142,7 @@ function analyzeNode(
             message: `Counter-axis spacing ${node.counterAxisSpacing}px is not a valid spacing token`,
             detail: `Nearest valid: ${nearestToken(node.counterAxisSpacing, spacingTokens)}px`,
             nodeId: node.id,
+            linkedPath: currentLinkedPath,
           })
         }
       }
@@ -155,6 +164,7 @@ function analyzeNode(
             message: `Padding-${pad.label} ${pad.value}px is not a valid token`,
             detail: `Nearest valid: ${nearestToken(pad.value, spacingTokens)}px`,
             nodeId: node.id,
+            linkedPath: currentLinkedPath,
           })
         }
       }
@@ -169,6 +179,7 @@ function analyzeNode(
         message: `Frame has ${node.children.length} children without auto-layout`,
         detail: 'Consider using auto-layout for consistent spacing',
         nodeId: node.id,
+        linkedPath: currentLinkedPath,
       })
     }
 
@@ -183,6 +194,7 @@ function analyzeNode(
         message: 'Component uses fixed width instead of FILL or HUG',
         detail: 'layoutSizingHorizontal: FIXED — consider using FILL for responsive behavior',
         nodeId: node.id,
+        linkedPath: currentLinkedPath,
       })
     }
 
@@ -197,6 +209,7 @@ function analyzeNode(
         message: 'FILL-sized element has no min/max width constraints',
         detail: 'Add minWidth/maxWidth to prevent element from stretching or shrinking too much',
         nodeId: node.id,
+        linkedPath: currentLinkedPath,
       })
     }
 
@@ -218,6 +231,7 @@ function analyzeNode(
           message: 'Fill color has no color style applied',
           detail: 'Raw color value — use a design token instead',
           nodeId: node.id,
+          linkedPath: currentLinkedPath,
         })
       }
     }
@@ -227,7 +241,7 @@ function analyzeNode(
   if (node.children) {
     const nextDepth = FRAME_TYPES.has(node.type) ? depth + 1 : depth
     for (const child of node.children) {
-      analyzeNode(child, currentPath, issues, stats, config, nextDepth)
+      analyzeNode(child, currentPath, issues, stats, config, nextDepth, currentLinkedPath)
     }
   }
 }
@@ -273,7 +287,7 @@ export function analyzeFile(
       if (page.children) {
         for (const topLevel of page.children) {
           if (FRAME_TYPES.has(topLevel.type)) {
-            analyzeNode(topLevel, page.name, issues, stats, config, 0)
+            analyzeNode(topLevel, page.name, issues, stats, config, 0, page.name)
           }
         }
       }

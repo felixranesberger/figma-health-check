@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useHealthCheck } from './composables/useHealthCheck'
+import type { LinkMode } from './composables/useHealthCheck'
 import ConfigPanel from './components/ConfigPanel.vue'
 import ResultsPanel from './components/ResultsPanel.vue'
 import TokensPanel from './components/TokensPanel.vue'
@@ -22,6 +23,7 @@ const {
   toggleAllPages,
   fetchPages,
   fileKey,
+  linkMode,
   tokens,
   filteredIssues,
   errorCount,
@@ -94,6 +96,19 @@ const hasResults = () => result.value && score.value !== null
               rel="noopener noreferrer"
               class="text-(--color-accent) hover:underline"
             >How to generate a token &nearr;</a>
+            <span class="mx-1 opacity-30">|</span>
+            <label class="inline-flex items-center gap-1.5">
+              Open links in
+              <select
+                :value="linkMode"
+                class="rounded border border-(--color-border) bg-(--color-surface) px-1.5 py-0.5 text-[11px] text-(--color-text)"
+                @change="linkMode = ($event.target as HTMLSelectElement).value as LinkMode"
+              >
+                <option value="web">Browser</option>
+                <option value="desktop">Desktop app</option>
+                <option value="desktop-fallback">Desktop app, fallback to browser</option>
+              </select>
+            </label>
           </div>
         </div>
 
@@ -240,6 +255,7 @@ const hasResults = () => result.value && score.value !== null
         :info-count="infoCount"
         :filtered-issues="filteredIssues"
         :file-key="fileKey"
+        :link-mode="linkMode"
         v-model:type-filter="typeFilter"
         v-model:severity-filter="severityFilter"
       />

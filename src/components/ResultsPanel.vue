@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { AnalysisResult, Issue, IssueType, Severity } from '../lib/analyzer'
+import type { LinkMode } from '../composables/useHealthCheck'
 import StatCard from './StatCard.vue'
 import IssueRow from './IssueRow.vue'
 
@@ -12,6 +13,7 @@ const props = defineProps<{
   infoCount: number
   filteredIssues: Issue[]
   fileKey: string
+  linkMode: LinkMode
   typeFilter: IssueType | 'all'
   severityFilter: Severity | 'all'
 }>()
@@ -101,6 +103,7 @@ function severityLabel(s: Severity | 'all') {
         :index="i"
         :file-key="fileKey"
         :file-name="result.fileName"
+        :link-mode="linkMode"
       />
     </template>
     <div
