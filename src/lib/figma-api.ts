@@ -3,8 +3,12 @@ import type { FigmaFileResponse, FigmaStylesResponse } from './schemas'
 
 const BASE = 'https://api.figma.com'
 
-export async function fetchFigmaFile(fileKey: string, token: string): Promise<FigmaFileResponse> {
-  const res = await fetch(`${BASE}/v1/files/${fileKey}?geometry=paths`, {
+export async function fetchFigmaFile(fileKey: string, token: string, opts?: { depth?: number; ids?: string[] }): Promise<FigmaFileResponse> {
+  const params = new URLSearchParams()
+  if (opts?.depth === undefined) params.set('geometry', 'paths')
+  if (opts?.depth !== undefined) params.set('depth', String(opts.depth))
+  if (opts?.ids?.length) params.set('ids', opts.ids.join(','))
+  const res = await fetch(`${BASE}/v1/files/${fileKey}?${params}`, {
     headers: { 'X-Figma-Token': token },
   })
   if (!res.ok) {
