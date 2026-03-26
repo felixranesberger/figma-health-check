@@ -25,6 +25,7 @@ export async function fetchFigmaStyles(fileKey: string, token: string): Promise<
 }
 
 export function extractFileKey(url: string): string {
-  const match = url.match(/figma\.com\/(?:file|design)\/([a-zA-Z0-9]+)/)
-  return match ? match[1] : url.trim()
+  const clean = url.split('?')[0].split('#')[0]
+  const match = clean.match(/figma\.com\/(?:file|design)\/([a-zA-Z0-9]+)/)
+  return match ? match[1] : clean.trim()
 }

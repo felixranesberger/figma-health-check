@@ -100,6 +100,7 @@ function severityLabel(s: Severity | 'all') {
         :issue="issue"
         :index="i"
         :file-key="fileKey"
+        :file-name="result.fileName"
       />
     </template>
     <div

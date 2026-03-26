@@ -9,12 +9,22 @@ const props = defineProps<{
   issue: Issue
   index: number
   fileKey: string
+  fileName: string
 }>()
+
+const isInstanceChild = computed(() => props.issue.nodeId.includes(';'))
 
 const figmaUrl = computed(() => {
   if (!props.fileKey || !props.issue.nodeId) return ''
-  const nodeId = props.issue.nodeId.replaceAll(':', '-')
-  return `https://www.figma.com/design/${props.fileKey}?node-id=${encodeURIComponent(nodeId)}`
+  let nodeId = props.issue.nodeId.replaceAll(':', '-')
+  // Compound instance-child IDs (e.g. I1810:4911;3487:26829) can't be navigated
+  // via URL — fall back to the parent instance node.
+  if (nodeId.includes(';')) {
+    nodeId = nodeId.replace(/^I/, '').split(';')[0]
+  }
+  const url = new URL(`https://www.figma.com/design/${props.fileKey}/${props.fileName.replace(/\s+/g, '-')}`)
+  url.searchParams.set('node-id', nodeId)
+  return url.toString()
 })
 </script>
 
@@ -60,6 +70,7 @@ const figmaUrl = computed(() => {
           {{ issue.nodeId }}
         </a>
         <span v-else>{{ issue.nodeId }}</span>
+        <span v-if="isInstanceChild" class="ml-1 opacity-60">(link opens parent instance — nested nodes can't be deep-linked)</span>
       </div>
     </div>
   </details>
