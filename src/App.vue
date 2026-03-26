@@ -242,6 +242,14 @@ const hasResults = () => result.value && score.value !== null
         Design Tokens
         <span v-if="tokens" class="ml-1 font-mono text-[11px]">({{ tokens.colors.length + tokens.textStyles.length }})</span>
       </button>
+      <span class="flex-1" />
+      <button
+        :disabled="loading"
+        class="cursor-pointer border-none bg-transparent px-3 py-2 text-[11px] font-semibold text-(--color-text-muted) transition-colors duration-150 hover:text-(--color-accent) disabled:cursor-not-allowed disabled:opacity-40"
+        @click="runCheck"
+      >
+        {{ loading ? 'Refreshing…' : 'Refresh' }}
+      </button>
     </div>
 
     <!-- Issues tab -->
