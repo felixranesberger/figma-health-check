@@ -245,10 +245,13 @@ const hasResults = () => result.value && score.value !== null
       <span class="flex-1" />
       <button
         :disabled="loading"
-        class="cursor-pointer border-none bg-transparent px-3 py-2 text-[11px] font-semibold text-(--color-text-muted) transition-colors duration-150 hover:text-(--color-accent) disabled:cursor-not-allowed disabled:opacity-40"
+        class="cursor-pointer rounded-md border border-(--color-border) px-3 py-1.5 text-[11px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60"
+        :class="loading
+          ? 'bg-transparent text-(--color-text-muted)'
+          : 'bg-(--color-accent) text-white hover:bg-(--color-accent-hover)'"
         @click="runCheck"
       >
-        {{ loading ? 'Refreshing…' : 'Refresh' }}
+        {{ loading ? 'Refreshing\u2026' : '\u21BB Refresh' }}
       </button>
     </div>
 

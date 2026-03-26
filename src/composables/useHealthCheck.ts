@@ -133,8 +133,6 @@ export function useHealthCheck() {
 
     loading.value = true
     error.value = null
-    result.value = null
-    tokens.value = null
     try {
       if (!fileKey.value) throw new Error('Invalid Figma file URL or key')
 
